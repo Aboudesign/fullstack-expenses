@@ -1,0 +1,38 @@
+POST http://localhost:8000/api/transactions/
+Content-Type: application/json
+
+{
+    "text": "Salire Mars",
+    "amount": -50.00
+}
+
+
+
+###
+
+GET http://localhost:8000/api/transactions/
+
+
+
+###
+
+DELETE https://localhost:8000/api/transactions/
+
+
+###
+PUT http://localhost:8000/api/transactions/7e1eb206-2f22-4053-80d9-3d53759ae82e/
+Content-Type: application/json
+
+{
+    "text": "Salire april",
+    "amount": 4111.00
+}
+###
+PATCH http://localhost:8000/api/transactions/6c08a418-b465-4e7c-bb91-6d3c5c65f235/
+Content-Type: application/json
+
+{
+    "text": "Salire july",
+  
+}
+
