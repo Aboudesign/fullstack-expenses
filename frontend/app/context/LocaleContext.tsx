@@ -5,10 +5,12 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 import {
   DEFAULT_LOCALE_SETTINGS,
+  getLocaleSnapshot,
+  LOCALE_CHANGE_EVENT,
   loadLocaleSettings,
   saveLocaleSettings,
 } from "../locale-config";
@@ -23,31 +25,32 @@ type LocaleContextValue = ReturnType<typeof createFormatters> & {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
+function subscribeLocale(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(LOCALE_CHANGE_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(LOCALE_CHANGE_EVENT, onStoreChange);
+  };
+}
+
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<LocaleSettings>(() =>
-    typeof window !== "undefined"
-      ? loadLocaleSettings()
-      : DEFAULT_LOCALE_SETTINGS
+  const settings = useSyncExternalStore(
+    subscribeLocale,
+    getLocaleSnapshot,
+    () => DEFAULT_LOCALE_SETTINGS
   );
 
-  const setLocale = useCallback(
-    (locale: string) => setSettings((prev) => {
-      const next = { ...prev, locale };
-      saveLocaleSettings(next);
-      document.documentElement.lang = locale.split("-")[0];
-      return next;
-    }),
-    []
-  );
+  const setLocale = useCallback((locale: string) => {
+    const next = { ...loadLocaleSettings(), locale };
+    saveLocaleSettings(next);
+    document.documentElement.lang = locale.split("-")[0];
+  }, []);
 
-  const setCurrency = useCallback(
-    (currency: string) => setSettings((prev) => {
-      const next = { ...prev, currency };
-      saveLocaleSettings(next);
-      return next;
-    }),
-    []
-  );
+  const setCurrency = useCallback((currency: string) => {
+    const next = { ...loadLocaleSettings(), currency };
+    saveLocaleSettings(next);
+  }, []);
 
   const formatters = useMemo(() => createFormatters(settings), [settings]);
 

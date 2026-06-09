@@ -1,6 +1,7 @@
 import type { LocaleSettings } from "./types";
 
 export const LOCALE_STORAGE_KEY = "expenses-locale";
+export const LOCALE_CHANGE_EVENT = "expenses-locale-change";
 
 export const DEFAULT_LOCALE_SETTINGS: LocaleSettings = {
   locale: "fr-FR",
@@ -70,11 +71,12 @@ export function isValidLocaleSettings(
   return LOCALE_VALUES.has(v.locale) && CURRENCY_VALUES.has(v.currency);
 }
 
-export function loadLocaleSettings(): LocaleSettings {
-  if (typeof window === "undefined") return DEFAULT_LOCALE_SETTINGS;
+let cachedRaw: string | null | undefined;
+let cachedSettings: LocaleSettings = DEFAULT_LOCALE_SETTINGS;
+
+function parseLocaleSettings(raw: string | null): LocaleSettings {
+  if (!raw) return DEFAULT_LOCALE_SETTINGS;
   try {
-    const raw = localStorage.getItem(LOCALE_STORAGE_KEY);
-    if (!raw) return DEFAULT_LOCALE_SETTINGS;
     const parsed: unknown = JSON.parse(raw);
     return isValidLocaleSettings(parsed) ? parsed : DEFAULT_LOCALE_SETTINGS;
   } catch {
@@ -82,6 +84,26 @@ export function loadLocaleSettings(): LocaleSettings {
   }
 }
 
+export function getLocaleSnapshot(): LocaleSettings {
+  if (typeof window === "undefined") return DEFAULT_LOCALE_SETTINGS;
+
+  const raw = localStorage.getItem(LOCALE_STORAGE_KEY);
+  if (raw === cachedRaw) return cachedSettings;
+
+  cachedRaw = raw;
+  cachedSettings = parseLocaleSettings(raw);
+  return cachedSettings;
+}
+
+export function loadLocaleSettings(): LocaleSettings {
+  return getLocaleSnapshot();
+}
+
 export function saveLocaleSettings(settings: LocaleSettings) {
-  localStorage.setItem(LOCALE_STORAGE_KEY, JSON.stringify(settings));
+  if (typeof window === "undefined") return;
+  const raw = JSON.stringify(settings);
+  localStorage.setItem(LOCALE_STORAGE_KEY, raw);
+  cachedRaw = raw;
+  cachedSettings = settings;
+  window.dispatchEvent(new Event(LOCALE_CHANGE_EVENT));
 }
