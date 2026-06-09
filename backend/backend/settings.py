@@ -44,7 +44,7 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
-        "CORS_ALLOWED_ORIGINS", "http://localhost:3000"
+        "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001"
     ).split(",")
     if origin.strip()
 ]

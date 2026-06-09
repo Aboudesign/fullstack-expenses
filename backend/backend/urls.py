@@ -1,8 +1,23 @@
-
 from django.contrib import admin
-from django.urls import path , include
+from django.http import JsonResponse
+from django.urls import include, path
+
+
+def home(request):
+    return JsonResponse(
+        {
+            "app": "Mes dépenses — API",
+            "liens": {
+                "admin": "/admin/",
+                "transactions": "/api/transactions/",
+                "budgets": "/api/budgets/",
+            },
+        }
+    )
+
 
 urlpatterns = [
-    
-    path('api/', include('api.urls')),
+    path("", home),
+    path("admin/", admin.site.urls),
+    path("api/", include("api.urls")),
 ]
